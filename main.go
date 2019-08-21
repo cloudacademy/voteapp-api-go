@@ -216,8 +216,13 @@ func getClient() *mongo.Client {
 	fmt.Println("attempting mongodb backend connection...")
 
 	clientOptions := options.Client().ApplyURI(mongoconnstr)
-	clientOptions.Auth.Username = mongousername
-	clientOptions.Auth.Password = mongopassword
+
+    //test if auth is enable or expected,
+    //for demo purposes when we setup mongo as a replica set using a StatefulSet in K8s its disabled
+    if clientOptions.Auth != nil {
+        clientOptions.Auth.Username = mongousername
+	    clientOptions.Auth.Password = mongopassword
+    }
 
 	client, err := mongo.NewClient(clientOptions)
 
