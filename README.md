@@ -1,5 +1,5 @@
 # voteapp-api-go
-Provides a CRUD based API written in Go. The API is utilised by the [https://github.com/cloudacademy/voteapp-frontend-react](Language Voting) frontend web app. The API reads/writes into a MongoDB backend database.
+Provides a CRUD based API written in Go. The API is designed to read and write into a MongoDB backend database. The API is utilised by the [Language Voting](https://github.com/cloudacademy/voteapp-frontend-react) frontend web app. The frontend is developed using React and makes AJAX requests to this API.
 
 # API endpoints
 The API provides the following endpoints:
