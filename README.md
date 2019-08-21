@@ -54,7 +54,7 @@ curl -s -X DELETE http://localhost:8080/languages/{name}
 # Linux Compiling
 The API can be compiled using the following commands:
 ```
-GO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
 ```
 
 # API MongoDB Database
