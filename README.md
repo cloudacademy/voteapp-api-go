@@ -43,3 +43,36 @@ The API can be used to perform DELETEs with **curl** like so:
 ```
 curl -s -X DELETE http://localhost:8080/languages/{name}
 ```
+
+# Linux Compiling
+The API can be compiled using the following commands:
+```
+GO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
+```
+
+# API MongoDB Database
+The API is designed to read/write into a MongoDB database. The MongoDB database should be setup with the following mongo commands:
+```
+use langdb
+db.languages.insert({"name" : "go", "codedetail" : { "usecase" : "system, web, server-side", "rank" : 16, "compiled" : true, "homepage" : "https://golang.org", "download" : "https://golang.org/dl/", "votes" : 0}})
+db.languages.insert({"name" : "java", "codedetail" : { "usecase" : "system, web, server-side", "rank" : 2, "compiled" : true, "homepage" : "https://www.java.com/en/", "download" : "https://www.java.com/en/download/", "votes" : 0}})
+db.languages.insert({"name" : "nodejs", "codedetail" : { "usecase" : "system, web, server-side", "rank" : 30, "compiled" : false, "homepage" : "https://nodejs.org/en/", "download" : "https://nodejs.org/en/download/", "votes" : 0}})
+```
+
+# API Environment Vars
+The API looks for the following defined environment variables:
+```
+MONGO_CONN_STR
+MONGO_USERNAME
+MONGO_PASSWORD
+```
+
+# API Startup
+The API can be started directly using the **main.go** file like so
+```
+MONGO_CONN_STR=mongodb://localhost:27017/langdb MONGO_USERNAME=admin MONGO_PASSWORD=password go run main.goo
+```
+or by using the binary:
+```
+MONGO_CONN_STR=mongodb://localhost:27017/langdb MONGO_USERNAME=admin MONGO_PASSWORD=password ./api
+```
