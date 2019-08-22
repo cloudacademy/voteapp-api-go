@@ -30,7 +30,7 @@ curl -s http://localhost:8080/languages/{name}/vote | jq .
 # API POSTs with curl
 The API can be used to perform POSTs with **curl** like so:
 ```
-curl http://localhost:8080/languages/php \
+curl http://localhost:8080/languages/{name} \
 --header "Content-Type: application/json" \
 --request POST \
 --data-binary @- <<BODY
