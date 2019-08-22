@@ -60,7 +60,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
 ```
 
 # API MongoDB Database
-The API is designed to read/write into a MongoDB 4.2.x database. The MongoDB database should be setup with the following mongo commands:
+The API is designed to read/write into a MongoDB 4.2.x database. The MongoDB database should be setup and populated using the following commands performed within the mongo shell:
 ```
 use langdb;
 
