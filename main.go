@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -72,12 +73,16 @@ func getlanguages(w http.ResponseWriter, _ *http.Request) {
 	fmt.Println("GET api call made to /languages")
 
 	var langmap = make(map[string]*codedetail)
-	langs := returnAllLanguages(c, bson.M{})
+	langs, err := returnAllLanguages(c, bson.M{})
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+	}
+
 	for _, lang := range langs {
 		langmap[lang.Name] = &lang.Detail
 	}
 
-	err := json.NewEncoder(w).Encode(langmap)
+	err = json.NewEncoder(w).Encode(langmap)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
@@ -90,7 +95,7 @@ func getlanguagebyname(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println(fmt.Sprintf("GET api call made to /languages/%s", name))
 
-	lang := returnOneLanguage(c, bson.M{"name": name})
+	lang, _ := returnOneLanguage(c, bson.M{"name": name})
 	if lang == nil {
 		_ = json.NewEncoder(w).Encode("{'result' : 'language not found'}")
 	} else {
@@ -142,36 +147,37 @@ func voteChannel() (vchan chan string) {
 	return vchan
 }
 
-func returnAllLanguages(client *mongo.Client, filter bson.M) []*language {
+func returnAllLanguages(client *mongo.Client, filter bson.M) ([]*language, error) {
 	var langs []*language
 	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
 	cur, err := collection.Find(context.TODO(), filter)
 	if err != nil {
-		log.Fatal("Error on Finding all the documents", err)
+		return nil, errors.New("error querying documents from database")
 	}
 	for cur.Next(context.TODO()) {
 		var lang language
 		err = cur.Decode(&lang)
 		if err != nil {
-			log.Fatal("Error on Decoding the document", err)
+			return nil, errors.New("error on decoding the document")
 		}
 		langs = append(langs, &lang)
 	}
-	return langs
+	return langs, nil
 }
 
-func returnOneLanguage(client *mongo.Client, filter bson.M) *language {
+func returnOneLanguage(client *mongo.Client, filter bson.M) (*language, error) {
 	var lang language
 	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
 	singleResult := collection.FindOne(context.TODO(), filter)
 	if singleResult.Err() == mongo.ErrNoDocuments {
-		return nil
+		return nil, errors.New("no documents found")
 	}
 	if singleResult.Err() != nil {
 		log.Println("Find error: ", singleResult.Err())
+		return nil, singleResult.Err()
 	}
 	singleResult.Decode(&lang)
-	return &lang
+	return &lang, nil
 }
 
 func insertNewLanguage(client *mongo.Client, lang language) interface{} {
