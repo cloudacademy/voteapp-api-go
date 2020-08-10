@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"encoding/json"
 	"log"
@@ -23,11 +24,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-const MONGO_DB = "langdb"
-const MONGO_COLLECTION = "languages"
-const MONGO_DEFAULT_CONN_STR = "mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/langdb"
-const MONGO_DEFAULT_USERNAME = "admin"
-const MONGO_DEFAULT_PASSWORD = "password"
+const mongo_db = "langdb"
+const mongo_collection = "languages"
+const mongo_default_conn_str = "mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/langdb"
+const mongo_default_username = "admin"
+const mongo_default_password = "password"
 
 type codedetail struct {
 	Usecase  string `json:"usecase,omitempty" bson:"usecase"`
@@ -74,6 +75,7 @@ func getlanguages(w http.ResponseWriter, _ *http.Request) {
 
 	var langmap = make(map[string]*codedetail)
 	langs, err := returnAllLanguages(c, bson.M{})
+
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
@@ -148,9 +150,13 @@ func voteChannel() (vchan chan string) {
 }
 
 func returnAllLanguages(client *mongo.Client, filter bson.M) ([]*language, error) {
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	client.Connect(ctx)
+
 	var langs []*language
-	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
-	cur, err := collection.Find(context.TODO(), filter)
+	collection := client.Database(mongo_db).Collection(mongo_collection)
+	cur, err := collection.Find(ctx, filter)
 	if err != nil {
 		return nil, errors.New("error querying documents from database")
 	}
@@ -167,7 +173,7 @@ func returnAllLanguages(client *mongo.Client, filter bson.M) ([]*language, error
 
 func returnOneLanguage(client *mongo.Client, filter bson.M) (*language, error) {
 	var lang language
-	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
+	collection := client.Database(mongo_db).Collection(mongo_collection)
 	singleResult := collection.FindOne(context.TODO(), filter)
 	if singleResult.Err() == mongo.ErrNoDocuments {
 		return nil, errors.New("no documents found")
@@ -181,7 +187,7 @@ func returnOneLanguage(client *mongo.Client, filter bson.M) (*language, error) {
 }
 
 func insertNewLanguage(client *mongo.Client, lang language) interface{} {
-	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
+	collection := client.Database(mongo_db).Collection(mongo_collection)
 	insertResult, err := collection.InsertOne(context.TODO(), lang)
 	if err != nil {
 		log.Fatalln("Error on inserting new language", err)
@@ -191,7 +197,7 @@ func insertNewLanguage(client *mongo.Client, lang language) interface{} {
 }
 
 func removeOneLanguage(client *mongo.Client, filter bson.M) int64 {
-	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
+	collection := client.Database(mongo_db).Collection(mongo_collection)
 	deleteResult, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		log.Fatal("Error on deleting one Hero", err)
@@ -200,7 +206,7 @@ func removeOneLanguage(client *mongo.Client, filter bson.M) int64 {
 }
 
 func updateVote(client *mongo.Client, filter bson.M) int64 {
-	collection := client.Database(MONGO_DB).Collection(MONGO_COLLECTION)
+	collection := client.Database(mongo_db).Collection(mongo_collection)
 	updatedData := bson.M{"$inc": bson.M{"codedetail.votes": 1}}
 	updatedResult, err := collection.UpdateOne(context.TODO(), filter, updatedData)
 	if err != nil {
@@ -211,9 +217,9 @@ func updateVote(client *mongo.Client, filter bson.M) int64 {
 
 //getClient returns a MongoDB Client
 func getClient() *mongo.Client {
-	mongoconnstr := getEnv("MONGO_CONN_STR", MONGO_DEFAULT_CONN_STR)
-	mongousername := getEnv("MONGO_USERNAME", MONGO_DEFAULT_USERNAME)
-	mongopassword := getEnv("MONGO_PASSWORD", MONGO_DEFAULT_PASSWORD)
+	mongoconnstr := getEnv("MONGO_CONN_STR", mongo_default_conn_str)
+	mongousername := getEnv("MONGO_USERNAME", mongo_default_username)
+	mongopassword := getEnv("MONGO_PASSWORD", mongo_default_password)
 
 	fmt.Println("MongoDB connection details:")
 	fmt.Println("MONGO_CONN_STR:" + mongoconnstr)
@@ -230,12 +236,18 @@ func getClient() *mongo.Client {
 		clientOptions.Auth.Password = mongopassword
 	}
 
+	options.Client().SetMaxConnIdleTime(60000)
+	options.Client().SetHeartbeatInterval(5 * time.Second)
+
 	client, err := mongo.NewClient(clientOptions)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.Connect(context.Background())
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err = client.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -266,7 +278,7 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
-	fmt.Println("version 1.00")
+	fmt.Println("version 1.01")
 	fmt.Println("serving on port 8080...")
 	fmt.Println("tests:")
 	fmt.Println("curl -s localhost:8080/ok")
@@ -284,9 +296,9 @@ func main() {
 	router.HandleFunc("/ok", ok).Methods("GET")
 
 	//required for CORS - ajax API requests originating from the react browser vote app
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
-	methodsOk := handlers.AllowedMethods([]string{"GET, POST"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
 
 	//listen on port 8080
 	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(router)))
