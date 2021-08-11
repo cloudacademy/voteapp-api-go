@@ -29,8 +29,7 @@ jobs:
       run: |
         go get -v -t -d ./...
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
-        echo $RELEASE_VERSION
-        echo ${{ env.RELEASE_VERSION }}
+        tar -czf release-$RELEASE_VERSION.api.tar.gz api
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
@@ -44,6 +43,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          api
+          release-$RELEASE_VERSION.api.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
