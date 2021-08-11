@@ -12,10 +12,6 @@ jobs:
 
     - name: Set env
       run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - name: Test
-      run: |
-        echo $RELEASE_VERSION
-        echo ${{ env.RELEASE_VERSION }}
 
     - name: Set up Go
       uses: actions/setup-go@v2
@@ -26,7 +22,9 @@ jobs:
       run: |
         go get -v -t -d ./...
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
+        echo $RELEASE_VERSION
         tar -czf release-$RELEASE_VERSION.api.tar.gz api
+        ls -la
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
