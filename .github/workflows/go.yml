@@ -1,10 +1,7 @@
 name: Go
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+# Controls when the workflow will run
+on: push
 
 jobs:
 
