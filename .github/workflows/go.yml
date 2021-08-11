@@ -30,7 +30,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: api
-        path: release-$RELEASE_VERSION.api.tar.gz
+        path: release-${{ env.RELEASE_VERSION }}.api.tar.gz
 
     # Create Release v1
     - name: Make Release
@@ -38,6 +38,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          release-$RELEASE_VERSION.api.tar.gz
+          release-${{ env.RELEASE_VERSION }}.api.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
