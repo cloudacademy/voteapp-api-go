@@ -22,15 +22,18 @@ jobs:
       run: |
         go get -v -t -d ./...
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
-        echo $RELEASE_VERSION
-        tar -czf release-$RELEASE_VERSION.api.tar.gz api
+        tar -czf release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz api
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o api
+        tar -czf release-${{ env.RELEASE_VERSION }}.darwin-amd64.tar.gz api
         ls -la
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: api
-        path: release-${{ env.RELEASE_VERSION }}.api.tar.gz
+        name: release-${{ env.RELEASE_VERSION }}
+        path: | 
+          release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz
+          release-${{ env.RELEASE_VERSION }}.darwin-amd64.tar.gz
 
     # Create Release v1
     - name: Make Release
@@ -39,6 +42,7 @@ jobs:
       with:
         name: release-${{ env.RELEASE_VERSION }}
         files: |
-          release-${{ env.RELEASE_VERSION }}.api.tar.gz
+          release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz
+          release-${{ env.RELEASE_VERSION }}.darwin-amd64.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
