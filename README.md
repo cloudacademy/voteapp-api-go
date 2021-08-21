@@ -2,7 +2,7 @@
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/cloudacademy/voteapp-api-go)
 
 # Background
-Provides a CRUD based API written in Go. The API is designed to read and write into a MongoDB backend database. The API is utilised by the [Language Voting](https://github.com/cloudacademy/voteapp-frontend-react) frontend web app. The frontend is developed using React and makes AJAX requests to this API.
+Provides a CRUD based API written in Go. The API is designed to read and write into a MongoDB backend database.
 
 # API endpoints
 The API provides the following endpoints:
