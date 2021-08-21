@@ -1,3 +1,6 @@
+![Build Status](https://github.com/cloudacademy/voteapp-api-go/actions/workflows/go.yml/badge.svg) 
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/cloudacademy/voteapp-api-go)
+
 # CloudAcademy + DevOps
 This is part of the [CloudAcademy](https://cloudacademy.com/library/) Kubernetes/React/Go/MongoDB Learning Path!
 
