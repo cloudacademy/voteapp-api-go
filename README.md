@@ -76,7 +76,6 @@ show collections;
 
 db.languages.find();
 ```
-**Note**: The mongodb replicaset deployment used in the K8s cluster does not have authentication enabled and therefore doesnt require the admin user to be created.
 
 # API Environment Vars
 The API looks for the following defined environment variables:
@@ -85,7 +84,7 @@ MONGO_CONN_STR=mongodb://localhost:27017/langdb
 MONGO_USERNAME=admin
 MONGO_PASSWORD=password
 ```
-**Note**: The mongodb replicaset deployment used in the K8s cluster does not have authentication enabled and therefore doesnt require the environment variables MONGO_USERNAME and MONGO_USERNAME to be configured.
+**Note**: The environment variables MONGO_USERNAME and MONGO_USERNAME don't need to be specified if authentication is disabled or not configured on the MongoDB service.
 
 # API Startup
 The API can be started directly using the **main.go** file like so
