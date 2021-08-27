@@ -84,7 +84,7 @@ MONGO_CONN_STR=mongodb://localhost:27017/langdb
 MONGO_USERNAME=admin
 MONGO_PASSWORD=password
 ```
-**Note**: The environment variables MONGO_USERNAME and MONGO_USERNAME don't need to be specified if authentication is disabled or not configured on the MongoDB service.
+**Note**: The environment variables `MONGO_USERNAME` and `MONGO_USERNAME` don't need to be specified if authentication is disabled or not configured on the MongoDB service.
 
 # API Startup
 The API can be started directly using the **main.go** file like so
