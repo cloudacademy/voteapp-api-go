@@ -29,6 +29,8 @@ jobs:
         go get -v -t -d ./...
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
         tar -czf release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz api
+        CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o api
+        tar -czf release-${{ env.RELEASE_VERSION }}.linux-arm64.tar.gz api
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o api
         tar -czf release-${{ env.RELEASE_VERSION }}.darwin-amd64.tar.gz api
         ls -la
@@ -39,6 +41,7 @@ jobs:
         name: release-${{ env.RELEASE_VERSION }}
         path: | 
           release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz
+          release-${{ env.RELEASE_VERSION }}.linux-arm64.tar.gz
           release-${{ env.RELEASE_VERSION }}.darwin-amd64.tar.gz
 
     # Create Release v1
@@ -49,6 +52,7 @@ jobs:
         name: release-${{ env.RELEASE_VERSION }}
         files: |
           release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz
+          release-${{ env.RELEASE_VERSION }}.linux-arm64.tar.gz
           release-${{ env.RELEASE_VERSION }}.darwin-amd64.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
