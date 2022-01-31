@@ -7,10 +7,11 @@ Provides a CRUD based API written in Go. The API is designed to read and write i
 # API endpoints
 The API provides the following endpoints:
 ```
+GET /ok
+GET /cpu
 GET /languages
 GET /languages/{name}
 GET /languages/{name}/vote
-GET /ok
 POST /languages/{name}
 DELETE /languages/{name}
 ```
