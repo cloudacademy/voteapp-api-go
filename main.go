@@ -22,6 +22,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+
+	"github.com/shirou/gopsutil/cpu"
+	"runtime"
 )
 
 const mongo_db = "langdb"
@@ -52,7 +55,7 @@ func createlanguage(w http.ResponseWriter, req *http.Request) {
 	_ = json.NewDecoder(req.Body).Decode(&detail)
 	name := strings.ToLower(params["name"])
 
-	fmt.Println(fmt.Sprintf("POST api call made to /languages/%s", name))
+	fmt.Printf("POST api call made to /languages/%s\n", name)
 
 	lang := language{name, detail}
 
@@ -66,8 +69,6 @@ func createlanguage(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, err.Error(), 400)
 		}
 	}
-
-	return
 }
 
 func getlanguages(w http.ResponseWriter, _ *http.Request) {
@@ -88,14 +89,13 @@ func getlanguages(w http.ResponseWriter, _ *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 	}
-	return
 }
 
 func getlanguagebyname(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	name := strings.ToLower(params["name"])
 
-	fmt.Println(fmt.Sprintf("GET api call made to /languages/%s", name))
+	fmt.Printf("GET api call made to /languages/%s\n", name)
 
 	lang, _ := returnOneLanguage(c, bson.M{"name": name})
 	if lang == nil {
@@ -106,29 +106,26 @@ func getlanguagebyname(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, err.Error(), 400)
 		}
 	}
-
-	return
 }
 
 func deletelanguagebyname(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	name := strings.ToLower(params["name"])
 
-	fmt.Println(fmt.Sprintf("DELETE api call made to /languages/%s", name))
+	fmt.Printf("DELETE api call made to /languages/%s\n", name)
 
 	languagesRemoved := removeOneLanguage(c, bson.M{"name": name})
 
 	_ = json.NewEncoder(w).Encode(fmt.Sprintf("{'count' : %d}", languagesRemoved))
-
-	return
 }
 
 func voteonlanguage(w http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	name := strings.ToLower(params["name"])
 
-	fmt.Println(fmt.Sprintf("GET api call made to /languages/%s/vote", name))
+	fmt.Printf("GET api call made to /languages/%s/vote\n", name)
 
+	//example using go funcs + channels
 	//votesUpdated := updateVote(c, bson.M{"name": name})
 	vchan := voteChannel()
 	vchan <- name
@@ -139,6 +136,7 @@ func voteonlanguage(w http.ResponseWriter, req *http.Request) {
 }
 
 func voteChannel() (vchan chan string) {
+	//example using go funcs + channels
 	vchan = make(chan string)
 	go func() {
 		name := <-vchan
@@ -266,7 +264,25 @@ func init() {
 
 func ok(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "OK!")
-	return
+}
+
+func cpuDetails(w http.ResponseWriter, req *http.Request) {
+	// cpu - get CPU number of cores and speed
+	cpuStat, err := cpu.Info()
+	if err != nil {
+		fmt.Println(err)
+	}
+	
+	runtimeOS := runtime.GOOS
+
+	fmt.Fprintf(w, "OS: %s\n", runtimeOS)
+	fmt.Fprintf(w, "CPU index number: %s\n", strconv.FormatInt(int64(cpuStat[0].CPU), 10))
+	fmt.Fprintf(w, "CPU index number: %s\n", strconv.FormatInt(int64(cpuStat[0].CPU), 10))
+	fmt.Fprintf(w, "VendorID: %s\n", cpuStat[0].VendorID)
+	fmt.Fprintf(w, "Family: %s\n", cpuStat[0].Family)
+	fmt.Fprintf(w, "Number of cores: %s\n", strconv.FormatInt(int64(cpuStat[0].Cores), 10))
+	fmt.Fprintf(w, "Model Name: %s\n", cpuStat[0].ModelName)
+	fmt.Fprintf(w, "Speed: %s\n", strconv.FormatFloat(cpuStat[0].Mhz, 'f', 2, 64))
 }
 
 func getEnv(key, fallback string) string {
@@ -282,6 +298,7 @@ func main() {
 	fmt.Println("serving on port 8080...")
 	fmt.Println("tests:")
 	fmt.Println("curl -s localhost:8080/ok")
+	fmt.Println("curl -s localhost:8080/cpu")	
 	fmt.Println("curl -s localhost:8080/languages")
 	fmt.Println("curl -s localhost:8080/languages | jq .")
 
@@ -294,6 +311,7 @@ func main() {
 	router.HandleFunc("/languages/{name}", deletelanguagebyname).Methods("DELETE")
 	router.HandleFunc("/languages/{name}/vote", voteonlanguage).Methods("GET")
 	router.HandleFunc("/ok", ok).Methods("GET")
+	router.HandleFunc("/cpu", cpuDetails).Methods("GET")
 
 	//required for CORS - ajax API requests originating from the react browser vote app
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
