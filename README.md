@@ -9,6 +9,7 @@ The API provides the following endpoints:
 ```
 GET /ok
 GET /cpu
+GET /version
 GET /languages
 GET /languages/{name}
 GET /languages/{name}/vote
@@ -51,7 +52,7 @@ curl -s -X DELETE http://localhost:8080/languages/{name}
 # Linux Compiling
 The API can be compiled using the following commands:
 ```
-#ensure to be in the same dir as the main.go file
+#ensure to be in the same dir as the **main.go** file
 go get -v -t -d ./...
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
 ```
