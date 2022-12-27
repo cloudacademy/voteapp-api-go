@@ -26,6 +26,7 @@ jobs:
 
     - name: Build
       run: |
+        sed -i 's/TOKEN_VERSION/${{ env.RELEASE_VERSION }}/g' main.go
         go get -v -t -d ./...
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api
         tar -czf release-${{ env.RELEASE_VERSION }}.linux-amd64.tar.gz api
