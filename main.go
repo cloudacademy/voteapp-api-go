@@ -283,7 +283,11 @@ func init() {
 }
 
 func ok(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "OK!")
+	fmt.Fprintf(w, "OK!\n")
+}
+
+func version(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "API vTOKEN_VERSION\n")
 }
 
 func cpuDetails(w http.ResponseWriter, req *http.Request) {
@@ -318,7 +322,8 @@ func main() {
 	fmt.Println("serving on port 8080...")
 	fmt.Println("tests:")
 	fmt.Println("curl -s localhost:8080/ok")
-	fmt.Println("curl -s localhost:8080/cpu")	
+	fmt.Println("curl -s localhost:8080/cpu")
+	fmt.Println("curl -s localhost:8080/version")
 	fmt.Println("curl -s localhost:8080/languages")
 	fmt.Println("curl -s localhost:8080/languages | jq .")
 
@@ -332,6 +337,7 @@ func main() {
 	router.HandleFunc("/languages/{name}/vote", voteonlanguage).Methods("GET")
 	router.HandleFunc("/ok", ok).Methods("GET")
 	router.HandleFunc("/cpu", cpuDetails).Methods("GET")
+	router.HandleFunc("/version", version).Methods("GET")
 
 	//required for CORS - ajax API requests originating from the react browser vote app
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
