@@ -39,12 +39,17 @@ type codedetail struct {
 	Compiled bool   `json:"compiled" bson:"compiled"`
 	Homepage string `json:"homepage,omitempty" bson:"homepage"`
 	Download string `json:"download,omitempty" bson:"download"`
-	Votes    int    `json:"votes" bson:"votes"`
+	Votes    int64  `json:"votes" bson:"votes"`
 }
 
 type language struct {
 	Name   string     `json:"name,omitempty" bson:"name"`
 	Detail codedetail `json:"codedetail,omitempty" bson:"codedetail"`
+}
+
+type voteresult struct {
+	Name   string `json:"name"`
+	Votes  int64  `json:"votes"`
 }
 
 var c *mongo.Client
@@ -129,10 +134,16 @@ func voteonlanguage(w http.ResponseWriter, req *http.Request) {
 	//votesUpdated := updateVote(c, bson.M{"name": name})
 	vchan := voteChannel()
 	vchan <- name
-	votesUpdated := <-vchan
+	voteCount, _ := strconv.ParseInt(<-vchan, 10, 64)
 	close(vchan)
 
-	_ = json.NewEncoder(w).Encode(fmt.Sprintf("{'count' : %s}", votesUpdated))
+	w.Header().Set("Content-Type", "application/json")
+
+	voteresult := voteresult{
+		Name: name,
+		Votes: voteCount,
+	}
+	_ = json.NewEncoder(w).Encode(voteresult)
 }
 
 func voteChannel() (vchan chan string) {
@@ -141,8 +152,8 @@ func voteChannel() (vchan chan string) {
 	go func() {
 		name := <-vchan
 		//fmt.Println(fmt.Sprintf("name is %s", name))
-		votesUpdated := strconv.FormatInt((updateVote(c, bson.M{"name": name})), 10)
-		vchan <- votesUpdated
+		voteUpdated := strconv.FormatInt((updateVote(c, bson.M{"name": name})), 10)
+		vchan <- voteUpdated
 	}()
 	return vchan
 }
@@ -204,13 +215,22 @@ func removeOneLanguage(client *mongo.Client, filter bson.M) int64 {
 }
 
 func updateVote(client *mongo.Client, filter bson.M) int64 {
+	upsert := true
+	after := options.After
+	opt := options.FindOneAndUpdateOptions{
+		ReturnDocument: &after,
+		Upsert:         &upsert,
+	}
+
 	collection := client.Database(mongo_db).Collection(mongo_collection)
 	updatedData := bson.M{"$inc": bson.M{"codedetail.votes": 1}}
-	updatedResult, err := collection.UpdateOne(context.TODO(), filter, updatedData)
-	if err != nil {
-		log.Fatal("Error on updating one Hero", err)
+	updatedResult := collection.FindOneAndUpdate(context.TODO(), filter, updatedData, &opt)
+	if updatedResult.Err() != nil {
+		log.Fatal("Error on updating language vote count", updatedResult.Err())
 	}
-	return updatedResult.ModifiedCount
+	lang := language{}
+	_ = updatedResult.Decode(&lang)
+	return lang.Detail.Votes
 }
 
 //getClient returns a MongoDB Client
